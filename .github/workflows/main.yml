@@ -1,11 +1,25 @@
 name: BSD CI
 
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
-      - uses: leanprover/lean-action@v1
-      - run: lake build
+
+      - name: Install Lean
+        uses: leanprover/lean-action@v1
+        with:
+          auto-config: true
+
+      # ★ これが必要（依存解決）
+      - name: Update dependencies
+        run: lake update
+
+      # ★ manifest生成
+      - name: Build project
+        run: lake build
