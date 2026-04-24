@@ -16,10 +16,10 @@ jobs:
         with:
           auto-config: true
 
-      # ★ これが必要（依存解決）
-      - name: Update dependencies
+      # ★ ここが必須
+      - name: Generate lake manifest
         run: lake update
 
-      # ★ manifest生成
+      # ★ ビルド
       - name: Build project
         run: lake build
