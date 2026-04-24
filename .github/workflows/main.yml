@@ -2,12 +2,13 @@ name: Lean CI
 
 on:
   push:
+    branches: [ main ]
   pull_request:
+    branches: [ main ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -17,14 +18,5 @@ jobs:
         with:
           auto-config: true
 
-      # ★ 必須：プロジェクト認識
-      - name: Check files
-        run: ls -la
-
-      # ★ 必須：manifest生成
-      - name: Generate lake manifest
-        run: lake update
-
-      # ★ ビルド
       - name: Build
         run: lake build
