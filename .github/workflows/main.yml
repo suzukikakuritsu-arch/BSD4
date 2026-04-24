@@ -2,9 +2,7 @@ name: Lean CI
 
 on:
   push:
-    branches: [ main ]
   pull_request:
-    branches: [ main ]
 
 jobs:
   build:
@@ -17,6 +15,10 @@ jobs:
         uses: leanprover/lean-action@v1
         with:
           auto-config: true
+
+      # ★ ここで強引にマニフェストを生成させる
+      - name: Update Lake Manifest
+        run: lake update
 
       - name: Build
         run: lake build
