@@ -1,4 +1,4 @@
-name: BSD CI
+name: Lean CI
 
 on:
   push:
@@ -9,17 +9,22 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Install Lean
         uses: leanprover/lean-action@v1
         with:
           auto-config: true
 
-      # ★ ここが必須
+      # ★ 必須：プロジェクト認識
+      - name: Check files
+        run: ls -la
+
+      # ★ 必須：manifest生成
       - name: Generate lake manifest
         run: lake update
 
       # ★ ビルド
-      - name: Build project
+      - name: Build
         run: lake build
