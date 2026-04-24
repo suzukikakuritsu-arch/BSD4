@@ -11,14 +11,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Lean
-        uses: leanprover/lean-action@v1
-        with:
-          auto-config: true
+      # auto-config を使わずに Elan (Lean) だけ入れる
+      - name: Install Elan
+        run: |
+          curl https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -sSf | sh -s -- -y
+          echo "$HOME/.elan/bin" >> $GITHUB_PATH
 
-      # ★ ここで強引にマニフェストを生成させる
-      - name: Update Lake Manifest
+      # ここでマニフェストを強制生成
+      - name: Update Manifest
         run: lake update
+
+      # Mathlib のバイナリを取得（これをしないとビルドに数時間かかります）
+      - name: Get Mathlib Cache
+        run: lake exe cache get
 
       - name: Build
         run: lake build
