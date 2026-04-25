@@ -527,6 +527,328 @@ logD の境界値（2.5, 4.5）が
 でも「証明」への道は
 まだ見えていません。
 
+python3 -c "
+from sympy import isprime, factorint
+import math
+
+def count_points(A, B, p):
+    count = 1
+    for x in range(p):
+        rhs = (pow(x,3) + A*x + B) % p
+        for y in range(p):
+            if (y*y) % p == rhs:
+                count += 1
+    return count
+
+def ap(A, B, p):
+    return p + 1 - count_points(A, B, p)
+
+primes_list = [p for p in range(3, 300) if isprime(p)]
+
+def features(A, B, n=60):
+    disc = 4*A**3 + 27*B**2
+    if disc == 0: return None
+    bad = set(factorint(abs(disc)).keys())
+    good = [p for p in primes_list[:n] if p not in bad]
+    if len(good) < 15: return None
+    aps = [ap(A,B,p) for p in good]
+    def zr(ell):
+        if ell in bad: return 0
+        return sum(1 for a in aps if a%ell==0)/len(aps)
+    disc_f = factorint(abs(disc))
+    pts = [(x, int(math.isqrt(x**3+A*x+B)))
+           for x in range(-15,30)
+           if x**3+A*x+B>=0
+           and int(math.isqrt(x**3+A*x+B))**2==x**3+A*x+B]
+    return {
+        'logD': math.log(abs(disc)),
+        'me': max(disc_f.values()),
+        'mod2': zr(2),
+        'nf': len(disc_f),
+        'pts': len(pts),
+    }
+
+def predict_rank(f):
+    if f is None: return None
+    logD = f['logD']
+    me   = f['me']
+    mod2 = f['mod2']
+    
+    if logD < 2.5 and mod2 > 0.6:
+        return 0
+    elif logD > 4.5 and me > 2 and mod2 < 0.3:
+        return 2
+    elif 2.5 <= logD <= 4.5 and 0.3 <= mod2 <= 0.6:
+        return 1
+    else:
+        return None  # 判別不能
+
+# 訓練データ（今日使ったもの）
+train = [
+    (-1,0,0),( 1,0,0),(-2,-1,0),(-2,1,0),
+    (-4,3,0),(-4,-3,0),(0,1,0),(0,-1,0),
+    (-1,1,1),(-1,-1,1),(1,1,1),(0,-2,1),
+    (-7,7,1),(-7,-7,1),(2,1,1),(2,-1,1),
+    (0,-4,2),(1,-2,2),(-2,3,2),
+]
+
+# 検証データ（新しい曲線）
+verify = [
+    # rank=0（Cremona より）
+    (-3, 1, 0), (3, -1, 0), (1, -1, 0),
+    # rank=1
+    (1, -1, 1), (-1, 2, 1), (3, 2, 1),
+    # rank=2
+    (0, -1, 2), (2, -3, 2), (-1, 3, 2),
+]
+
+print('検証：判別境界の精度')
+print()
+print('訓練データ（再確認）：')
+correct = 0; total = 0; unknown = 0
+for A, B, rank in train:
+    f = features(A, B)
+    pred = predict_rank(f)
+    if pred is None:
+        unknown += 1
+        mark = '?'
+    else:
+        total += 1
+        if pred == rank:
+            correct += 1
+            mark = '✓'
+        else:
+            mark = '✗'
+    print(f'  y²=x³{A:+}x{B:+} rank={rank} pred={pred} {mark}')
+
+print(f'  正解率: {correct}/{total} = {correct/total:.0%}, 判別不能: {unknown}')
+
+print()
+print('検証データ（新しい曲線）：')
+c2 = 0; t2 = 0; u2 = 0
+for A, B, rank in verify:
+    f = features(A, B)
+    pred = predict_rank(f)
+    disc = 4*A**3 + 27*B**2
+    if pred is None:
+        u2 += 1
+        mark = '?'
+    else:
+        t2 += 1
+        if pred == rank:
+            c2 += 1
+            mark = '✓'
+        else:
+            mark = '✗'
+    print(f'  y²=x³{A:+}x{B:+} disc={disc} rank={rank} pred={pred} {mark}')
+if t2 > 0:
+    print(f'  正解率: {c2}/{t2} = {c2/t2:.0%}, 判別不能: {u2}')
+" 2>&1
+
+y² = x³ + Ax + B
+
+係数は A, B の2つ
+（x³ の係数は常に1）
+
+3×3 行列にするなら
+特徴量を3つ選ぶという意味でしたが
+係数そのものは2つです
+
+使っていません。
+
+今日やったこと：
+  ap の分布（mod パターン）
+  disc の素因数構造
+  整数点の数
+  係数の符号
+
+使っていないもの：
+  ap を p^{-s} で重み付けした和
+  = L関数そのもの
+
+ap を単に分類するのではなく
+Σ ap / p という和を計算すれば
+L(E,1) に近い情報が得られる
+L(E,1) ≈ Σ_{p≦N} ap × log(p)/p
+
+これが rank=0 → 非零
+    rank=1,2 → 0 に近い
+
+試しますか？
+
+rank=0：L_sum が正（1.0〜2.7）
+rank=1：L_sum が負（-7.1〜-1.1）
+rank=2：L_sum が負（-5.0〜+0.6）
+
+rank=0 と rank≥1 が符号で分離！
+
+rank=1 と rank=2 はまだ重複
+（y²=x³+x-2 だけ rank=2 なのに正）
+
+Σ ap*log(p)/p の符号
+= rank=0 か rank≥1 かの指標
+
+これが L(E,1) の本質的な情報
+ap を p で重み付けすることで
+mod の単純な分布より
+はるかに強い情報が得られる
+
+rank=1 と rank=2 を区別するには
+別の重み付けが必要か？
+
+Σ ap*log(p)/p² を試す？
+または N を増やす？
+
+yes。
+
+p=2,3 は bad_primes に入りやすい
+→ 除外されることが多い
+→ L_sum の計算から抜ける
+
+p=2,3 の ap は
+他の素数より L_sum への寄与が大きい
+（log(2)/2 = 0.35, log(3)/3 = 0.37）
+
+小さい素数が除外されると
+L_sum の精度が下がる
+
+実際に確認します。
+
+python3 -c "
+from sympy import isprime, factorint
+import math
+
+def count_points(A, B, p):
+    count = 1
+    for x in range(p):
+        rhs = (pow(x,3) + A*x + B) % p
+        for y in range(p):
+            if (y*y) % p == rhs:
+                count += 1
+    return count
+
+def ap(A, B, p):
+    return p + 1 - count_points(A, B, p)
+
+primes_list = [p for p in range(2, 2000) if isprime(p)]
+
+def bad_primes(A, B):
+    disc = 4*A**3 + 27*B**2
+    if disc == 0: return None
+    return set(factorint(abs(disc)).keys())
+
+def L_sum(A, B, N):
+    bad = bad_primes(A, B)
+    if bad is None: return None
+    total = 0
+    for p in primes_list[:N]:
+        if p in bad: continue
+        a = ap(A, B, p)
+        total += a * math.log(p) / p
+    return total
+
+test = [
+    (-1,  0, 0), (-2, -1, 0),
+    (-1,  1, 1), ( 0, -2, 1),
+    ( 0, -4, 2), ( 1, -2, 2),
+]
+
+print('N を増やしたときの L_sum の変化：')
+print()
+print(f'{'曲線':18} rank  N=50    N=100   N=200   N=300')
+for A, B, rank in test:
+    vals = [L_sum(A, B, N) for N in [50, 100, 200, 300]]
+    v = '  '.join(f'{v:7.3f}' for v in vals)
+    print(f'y²=x³{A:+}x{B:+}  {rank}    {v}')
+
+print()
+print('符号の安定性：')
+for A, B, rank in test:
+    vals = [L_sum(A, B, N) for N in [50, 100, 200, 300]]
+    signs = ['+' if v > 0 else '-' for v in vals]
+    stable = len(set(signs)) == 1
+    print(f'y²=x³{A:+}x{B:+} rank={rank}: 符号={signs} 安定={stable}')
+" 2>&1
+
+python3 << 'EOF'
+from sympy import isprime, factorint
+import math
+
+def count_points(A, B, p):
+    count = 1
+    for x in range(p):
+        rhs = (pow(x,3) + A*x + B) % p
+        for y in range(p):
+            if (y*y) % p == rhs:
+                count += 1
+    return count
+
+def ap(A, B, p):
+    return p + 1 - count_points(A, B, p)
+
+primes_list = [p for p in range(2, 1000) if isprime(p)]
+
+def bad_p(A, B):
+    disc = 4*A**3 + 27*B**2
+    if disc == 0: return None
+    return set(factorint(abs(disc)).keys())
+
+def L_sum(A, B, N):
+    bad = bad_p(A, B)
+    if bad is None: return None
+    total = 0
+    for p in primes_list[:N]:
+        if p in bad: continue
+        a = ap(A, B, p)
+        total += a * math.log(p) / p
+    return total
+
+test = [
+    (-1,  0, 0),
+    (-2, -1, 0),
+    (-1,  1, 1),
+    ( 0, -2, 1),
+    ( 0, -4, 2),
+    ( 1, -2, 2),
+]
+
+print('N を増やしたときの L_sum：')
+print()
+for A, B, rank in test:
+    vals = [L_sum(A, B, N) for N in [30, 60, 100, 150]]
+    signs = ['+' if v > 0 else '-' for v in vals]
+    stable = len(set(signs)) == 1
+    print(f'y2=x3{A:+}x{B:+} rank={rank}:')
+    for i, N in enumerate([30,60,100,150]):
+        print(f'  N={N}: {vals[i]:8.3f}')
+    print(f'  符号: {signs} 安定={stable}')
+    print()
+EOF
+
+rank=0：符号が不安定（-2x-1 は N=60 で負になる）
+rank=1：符号が安定して負 ✓
+rank=2：y²=x³-4 は安定して負、
+        y²=x³+x-2 は安定して正 ✗
+
+理由：
+  これは L関数の正確な近似ではない
+
+  正確な L(E,1) の計算には
+  解析接続の補正が必要
+  単純な Σ ap*log(p)/p では
+  収束しない（条件収束）
+
+今日一日の計算を振り返ると：
+  mod パターン → rank=0 の一部を排除
+  logD と mod2 → 相関はある
+  Σ ap*log(p)/p → 不安定
+
+rank=1 と rank=2 の確実な区別には
+今日の計算では届きませんでした
+1. B の符号は disc を変えない（確定）
+2. logD と rank に相関がある（数値的に確認）
+3. mod2=0 が100% → rank=0 の排除（部分的）
+4. Σ ap*log(p)/p は rank=1 を安定して負に識別
 
 
 
