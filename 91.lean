@@ -49,3 +49,93 @@ NEXT STEPS:
 実周期 Ω_E の比率(0.084)を Torsion 寄与分として型定義し、
 BSD公式の完全な記述へと移行可能。
 ============================================================
+
+import Mathlib.NumberTheory.EllipticCurve.GaloisRepresentation
+import Mathlib.Algebra.Category.ModuleCat.Basic
+
+/-!
+# BSD Abyss: ガロア表現からランク削減への接続
+Colab で観測された $a_p \pmod \ell$ の挙動を、
+$H^1(G_\mathbb{Q}, E[\ell])$ の次元削減（drop）として定式化する。
+-/
+
+noncomputable section
+
+variable (E : EllipticCurve ℚ) (ℓ : ℕ) [Fact ℓ.Prime]
+
+-- 1. ℓ-進タテ加群と Frobenius 作用
+-- $T_\ell(E)$ はランク 2 の自由 $\mathbb{Z}_\ell$-加群
+def TateModule := E.TateModule ℓ
+
+-- 2. Frobenius 作用のトレース (これが Colab の a_p)
+-- $Tr(Frob_p | T_\ell(E)) = a_p$
+axiom frob_trace_eq_ap (p : ℕ) [Fact p.Prime] :
+  (LinearMap.trace ℤ_ℓ (TateModule E ℓ)) (EllipticCurve.frob E ℓ p) = coefficients_an E p
+
+-- 3. 「深淵」の drop 条件：非単射性の幾何学的源泉
+-- a_p ≡ 0 (mod ℓ) は、Frobenius 作用が Selmer 群上で Kernel を持つことに対応
+def is_abyssal_drop (p : ℕ) [Fact p.Prime] : Prop :=
+  (coefficients_an E p) % (ℓ : ℤ) = 0
+
+-- 4. ℓ-進 Selmer 群の次元削減
+-- ランク候補集合（chain）から、ガロアコホモロジーの制約によって次元を引く
+theorem dimension_reduction_from_abyss
+    (p : ℕ) [Fact p.Prime] (h : is_abyssal_drop E ℓ p) :
+    ∀ (S : Finset ℕ), apply_drop S ⟨1⟩ ⊆ S := by
+  -- ここにガロア表現の像がボレル部分群に含まれることを利用した証明が入る
+  sorry
+
+-- 5. 最終的な Rank 境界
+-- 無限個の「深淵の drop」が存在すれば、ランクは強制的に収束する
+theorem rank_convergence_in_abyss
+    (h_inf : ∀ N, ∃ p > N, Fact p.Prime ∧ is_abyssal_drop E ℓ p) :
+    AddGroup.rank (E ℚ) ≤ 1 := by
+  -- Kolyvagin のオイラー系証明の入り口
+  sorry
+import Mathlib.NumberTheory.EllipticCurve.GaloisRepresentation
+import Mathlib.Algebra.Category.ModuleCat.Basic
+import Mathlib.FieldTheory.IsalgClosed.Basic
+
+/-!
+# BSD Abyss: Galois Representations & Selmer Filtrations
+数値計算による $a_p$ の観測を、ガロアコホモロジー上の不変量へ写像し、
+Selmer群の次元（Rank）を「深淵」から決定する。
+-/
+
+noncomputable section
+
+variable (E : EllipticCurve ℚ) (ℓ : ℕ) [Fact ℓ.Prime]
+
+-- 1. ℓ-進 Galois 表現の定義
+-- $G_\mathbb{Q}$ から $Aut(T_\ell E) \cong GL_2(\mathbb{Z}_\ell)$ への準同型
+def GaloisRep := GaloisRepresentation E ℓ
+
+-- 2. 深淵の Kernel 条件 (Abyssal Kernel)
+-- $a_p \equiv 0 \pmod \ell$ は、Frobenius 作用が固有値 0 を持つこと（非単射性）の射影である
+def is_abyssal_kernel (p : ℕ) [Fact p.Prime] : Prop :=
+  (coefficients_an E p) % (ℓ : ℤ) = 0
+
+-- 3. Selmer群のフィルトレーションによるランク削減
+-- 局所的な Frobenius の非単射性が、大域的な Selmer 群の次元を削る「drop」の正体
+theorem selmer_dim_drop_from_galois
+    (p : ℕ) [Fact p.Prime] (h : is_abyssal_kernel E ℓ p) :
+    ∃ (φ : Selmer ℓ →ₗ[ZMod ℓ] Selmer ℓ), LinearMap.ker φ ≠ ⊥ := by
+  -- Frobenius 作用が Borel 部分群に固定されることで Kernel が生まれる
+  sorry
+
+-- 4. Kolyvagin Euler System の接着
+-- 解析的ランク（L関数の収束）と代数的ランク（Selmer群）を繋ぐ最終等式
+-- $L'(1) \neq 0$ という数値的事実を、Heegner 点の非ねじれ性に変換する
+axiom kolyvagin_connection (E : EllipticCurve ℚ) :
+  analyticRank E = 1 → (AddGroup.rank (E ℚ) = 1)
+
+-- 5. 最終結論：深淵からの脱出
+-- すべての drop 条件が満たされたとき、rank は論理的に確定する
+theorem final_bsd_descent (d0 : ℕ) (fs : ℕ → FrobAction) :
+  (∀ n, (fs n).drop ≥ 1) → ∃ N, (chain fs d0 N).card = 1 := by
+  -- §8 BSD_skeleton を用いて、ランク候補が {r} に収束することを証明
+  sorry
+
+
+
+
