@@ -1,0 +1,56 @@
+E1（rank=0）の観察：
+ap が全部偶数
+ap mod 2 = 0 が全素数で成立
+
+これは偶然ではない
+y² = x³ - x は 2-等分点を持つ
+→ ap ≡ 0 (mod 2) が常に成立
+→ rank の候補が制限される
+
+E2（rank=1）の観察：
+ap mod 2 が 0 と 1 が混在
+p=3,13,23,29,31 で ap が奇数
+
+rank=1 の曲線では
+この「奇数 ap」が現れる素数が
+Kolyvagin の制約に対応する可能性
+
+ABC：
+  q² | p^γ - a → γ mod T_q が固定
+
+BSD：
+  ap ≡ 0 (mod ℓ) → rank mod ℓ が制限
+  ap ≢ 0 (mod ℓ) → 新しい制約が追加
+
+E1 の ap mod 2 = 0（常に）
+→ rank が 0 に縛られる
+→ drops n = 0 → chain が縮まない
+→ rank=0 が確定
+
+E2 の ap mod 2 が混在
+→ rank=1 の可能性が残る
+
+E1（rank=0）：ap mod 2 = 0 が全素数で成立
+E2（rank=1）：ap mod 2 = 1 が8/19個の素数で出現
+
+これが drops の具体的な定義になれる：
+
+drops n = ap(E, p_n) mod 2
+
+E1 なら drops n = 0 → chain 縮まない → rank=0
+E2 なら drops n が時々 1 → chain が縮む → rank≥1
+
+「ap mod 2 = 0 が常に成立」
+= 2-等分点が存在する
+= E[2] が有理数体上で非自明
+
+これが rank=0 の特徴づけになるか？
+
+逆に「ap mod 2 = 1 となる素数が無限個存在」
+= Chebotarev の密度定理
+= これが drops ≥ 1 の保証になる
+
+
+
+
+
