@@ -1,0 +1,447 @@
+E1（rank=0）：
+  |E(Fp)| が常に 4 の倍数
+  = 2-等分点 E[2] が全て Fp 上に存在
+  → ap = p+1-|E| は常に偶数
+  → drops n = ap mod 2 = 0 が全 n で成立
+  → chain は一切縮まない
+  → rank の候補集合が {0} に固定される
+
+E2（rank=1）：
+  |E(Fp)| mod 4 が 0,1,2,3 全部出現
+  = 2-等分点が Fp 上に全部はない
+  → ap mod 2 が 0 と 1 の両方
+  → drops n = 1 が無限回出現（Chebotarev）
+  → chain が縮む
+
+ABC：
+  q² | p^γ - a
+  ↕（同じ構造）
+BSD：
+  E[ℓ](Fp) の大きさが制約を生む
+  |E[ℓ](Fp)| → ap mod ℓ → drops
+
+-- drops の具体的な定義
+def drops_from_curve (A B : ℤ) (p_n : ℕ) : ℕ :=
+  Int.natAbs (ap A B p_n) % 2
+
+-- E1 は drops = 0 が常に成立（定理として証明可能）
+-- E2 は drops = 1 が無限回（Chebotarev が必要）
+
+E1: |E(Fp)| が常に 4 の倍数
+    → ap mod 2 = 0 が全素数で成立
+    → これは証明できる（2-等分点の理論）
+
+E2: |E(Fp)| mod 4 が変動
+    → ap mod 2 = 1 が混在
+    → これも確認できた
+
+drops_from_curve A B p_n = ap(A,B,p_n) mod 2
+
+これを BSD の hd に使うには：
+
+「drops が無限回 1 になる」
+= Chebotarev の密度定理
+
+Chebotarev は Lean4 / Mathlib に
+形式化されていない（2026年現在）
+
+つまり hd の証明には
+また別の axiom が必要になる
+E1 の drops = 0 の証明：
+  2-等分点が全て有理数上
+  → |E(Fp)| ≡ 0 mod 4
+  → ap 偶数
+  これは初等的に証明できる
+
+E2 の drops が時々 1：
+  数値的には確認済み
+  無限回の保証には Chebotarev が必要
+ell=2：rank=1 と rank=2 の区別ができない
+  両方とも drops が同程度出る
+  
+ell=5：E3（rank=2）に偏りが出る
+  ap ≡ 0 (mod 5) が 59/100
+  これは何かを意味している可能性
+
+理論値（ランダム）= 20%
+実際 = 61%
+
+これは E3 が 5-等分点を持つから：
+  y² = x³ - 4 は CM 曲線
+  複素乗法 by Z[ω]（ω = 原始5乗根）
+  → E3[5] に特別な構造
+  → ap ≡ 0 (mod 5) が多くなる
+
+これが ABC の「高指数素因数」に対応：
+  E3 では ℓ=5 が「特別な素数」
+  ap ≡ 0 (mod 5) の素数が多い
+  = 5 が E3 の「制約素数」
+
+rank=0 → ell=2 で drops=0 が全部（2-等分点）
+rank=1 → ell=2 で drops=1 が混在
+rank=2 → ell=5 で ap≡0 が多い（CM構造）
+
+つまり：
+  rank を決める「特別な素数 ℓ」が存在する
+  E1 は ℓ=2
+  E3 は ℓ=5
+  これが各曲線の「制約素数」
+
+「特別な素数 ℓ」が存在して
+ap ≡ 0 (mod ℓ) が高頻度
+= E[ℓ] に構造がある
+= これが drops の実体
+
+drops_from_curve = ap mod（特別な ℓ）
+
+この「特別な ℓ」を
+係数 A, B から計算できるか？
+E1（rank=0）：ap mod 2 = 0 が全素数
+  理由：2-等分点が全て有理数上
+  → 証明できる
+
+E3（rank=2）：ap mod 5 が 61%
+  理由：CM構造（複素乗法）
+  → これは E3 固有の性質
+
+「特別な ℓ を A,B から計算する」
+
+これは楕円曲線の
+導手・CM理論・ℓ進表現の話で
+今日の計算で一般論を作るのは難しい
+
+E1 の ℓ=2 は 2-等分点から自明
+E3 の ℓ=5 は CM構造から来ている
+E2 の「特別な ℓ」は何か？
+→ 計算から見えていない
+
+見えている：
+  特定の曲線で ap mod ℓ のパターンが
+  rank と関係している
+
+見えていない：
+  一般の楕円曲線でどの ℓ を使えばいいか
+  ap mod ℓ が rank を決定する仕組み
+  = これが BSD の核心
+
+ap = 0 の頻度：
+  E1（rank=0）: 41/80 = 51%
+  E2（rank=1）:  5/80 =  6%
+  E3（rank=2）: 42/80 = 53%
+
+CM曲線（複素乗法あり）：
+  ap=0 が約50%
+  ap/√p が中央（0付近）に集中（E3の分布）
+
+non-CM曲線：
+  ap=0 が約3%
+  ap/√p がより均等に分布（Sato-Tate）
+
+今日確認できたこと：
+  CM か non-CM かで ap の分布が全然違う
+  これは本物の数学的事実
+
+BSD への接続として言えること：
+  CM曲線では rank の構造が特別
+  Kolyvagin の定理が CM曲線で最初に証明された
+  理由：CM構造が Heegner 点を与えるから
+
+つまり：
+  ap=0 が多い = CM曲線 = Heegner 点が存在
+  = Kolyvagin が機能する
+  = drops ≥ 1 の保証になる可能性
+
+non-CM曲線では：
+  Heegner 点の代わりに別の機構が必要
+  = まだ未解決の部分
+
+CM曲線に絞れば：
+  ap=0 の素数 = 超特異素数
+  これが drops の実体になりうる
+  Kolyvagin の定理との接続が見える
+
+次のステップ：
+  CM曲線の drops を超特異素数で定義
+  Lean4 でそこまで形式化する
+
+CM曲線：ap=0 が50%（超特異素数）
+non-CM曲線：ap=0 が3%（Sato-Tate）
+
+
+CM曲線 → Heegner 点が存在
+Heegner 点 → Kolyvagin の定理
+Kolyvagin → rank ≤ 1
+
+これは既知の定理で
+1989年に証明されています
+
+私たちが今日計算で「発見」したことは
+既存の数学の確認であって
+新しい証明ではありません
+
+ap の分布と CM/non-CM の違いを
+数値的に確認した
+
+これは理解のための計算として価値がある
+引き継ぎ資料としても意味がある
+
+でも「BSD を証明する新しい道」では
+今のところない
+
+E1 y²=x³-x は Z[i]（Gaussian整数）で CM
+
+p ≡ 3 (mod 4) → p は Z[i] で素数のまま
+  → E1(Fp) の構造が特別
+  → ap = 0 （超特異）
+
+p ≡ 1 (mod 4) → p = π×π̄ と分解
+  → E1(Fp) が通常の構造
+  → ap ≠ 0
+
+奇素数の半分が p≡3(mod4)
+→ ap=0 が約50%
+
+これは ABC の CRT 制約と全く同じ構造：
+  p ≡ 3 (mod 4) という条件 = mod 4 の制約
+
+non-CM 曲線では Elkies の定理（1987）：
+  超特異素数の密度は 0
+  でも無限個存在する
+
+数値で確認：
+  50素数中 10%
+  500素数中  1%
+  → 素数が増えると 0% に近づく
+  → 密度 0 が確認できた
+
+CM曲線の超特異素数：
+  p ≡ 3 (mod 4) という mod 条件
+  = ABC の「q² | p^γ - a → γ mod T_q が固定」
+  と全く同じ構造
+
+これが「やることは同じ」の具体的な実体
+
+non-CM 曲線でも超特異素数が無限個ある
+= chain が無限回縮む可能性がある
+
+でも密度 0 なので縮むのが「遅い」
+= rank が大きい曲線ほど縮みにくい？
+
+この「縮む速度」が rank と関係するか？
+
+今確認できた事実（本物）：
+  CM曲線：ap=0 が50%、ap²/p の平均が大きい
+  non-CM曲線：ap=0 が疎、ap²/p の平均が小さい
+
+でも：
+  rank=0 の CM と rank=2 の CM が
+  ap の統計で区別できない
+
+  rank=1 の non-CM は特別だが
+  それが rank=1 を「証明」することにはならない
+
+ap の分布は rank より CM/non-CM を反映している
+rank の情報は ap の分布には直接現れない
+= L(E,s) を s=1 で評価することが必要
+  そこで初めて rank の情報が出てくる
+ap 一つ一つは局所情報（Fp での点の数）
+rank は大域情報（Q での点の自由度）
+
+局所から大域へ繋ぐのが L(E,s)
+L(E,1) = 0 か否か = rank ≥ 1 か否か
+
+この橋が BSD の本体
+数値計算では確認できるが
+証明には解析的な議論が必要
+確実ではない。
+
+L(E,s) = Π 1/(1 - ap p^{-s} + p^{1-2s})
+
+ap の全体の積がL関数を作る
+L(E,1) の零点の位数 = rank（BSD予想）
+
+つまり：
+  個々の ap には rank が現れない
+  ap の「総合効果」として rank が現れる
+CM曲線（E1, E3）：
+  ap = 0 が 50%
+  ap ≠ 0 のとき ap = 2Re(π)
+  （π は Z[i] や Z[ω] の素元）
+  → ap が代数的な構造を持つ
+  → L(E,s) が保型形式として特別な形
+
+non-CM曲線（E2）：
+  ap が「ランダム」に分布（Sato-Tate）
+  → L(E,1) の値は解析的な計算が必要
+Frobenius 行列：
+  Frob_p = [[0, -p], [1, ap]]
+
+  det = p（Weil 予想）
+  trace = ap
+
+  固有値 α, β：
+    α + β = ap
+    αβ = p
+
+  L(E,s) = Π (1 - α p^{-s})^{-1} (1 - β p^{-s})^{-1}
+
+CM曲線では α, β が代数的
+non-CM では α, β が「超越的」
+
+Frobenius 行列の固有値 α, β を具体的に計算して、rank=0,1,2 での違いを見ますか？​​​​​​​​​​​​​​​​
+python3 -c "
+from sympy import isprime
+import math
+
+def count_points(A, B, p):
+    count = 1
+    for x in range(p):
+        rhs = (pow(x,3) + A*x + B) % p
+        for y in range(p):
+            if (y*y) % p == rhs:
+                count += 1
+    return count
+
+def ap(A, B, p):
+    return p + 1 - count_points(A, B, p)
+
+primes = [p for p in range(3, 100) if isprime(p)]
+
+curves = [
+    ('E1 rank=0 CM',     -1,  0),
+    ('E2 rank=1 non-CM', -1,  1),
+    ('E3 rank=2 CM',      0, -4),
+]
+
+print('Frobenius 行列の固有値 α, β')
+print('  α + β = ap')
+print('  α × β = p')
+print('  固有値 = (ap ± sqrt(ap²-4p)) / 2')
+print()
+
+for label, A, B in curves:
+    print(f'{label}:')
+    for p in primes[:8]:
+        a = ap(A, B, p)
+        disc = a*a - 4*p
+        if disc < 0:
+            # 複素固有値
+            re = a / 2
+            im = math.sqrt(-disc) / 2
+            print(f'  p={p:2d}: ap={a:3d}, α={re:.2f}+{im:.2f}i, |α|={math.sqrt(p):.2f}')
+        elif disc == 0:
+            print(f'  p={p:2d}: ap={a:3d}, α=β={a/2:.2f}（重根）')
+        else:
+            # 実固有値（ap=0のとき）
+            r1 = (a + math.sqrt(disc)) / 2
+            r2 = (a - math.sqrt(disc)) / 2
+            print(f'  p={p:2d}: ap={a:3d}, α={r1:.2f}, β={r2:.2f}')
+    print()
+" 2>&1
+
+python3 -c "
+from sympy import isprime
+import math
+
+def count_points(A, B, p):
+    count = 1
+    for x in range(p):
+        rhs = (pow(x,3) + A*x + B) % p
+        for y in range(p):
+            if (y*y) % p == rhs:
+                count += 1
+    return count
+
+def ap(A, B, p):
+    return p + 1 - count_points(A, B, p)
+
+primes = [p for p in range(3, 500) if isprime(p)]
+
+# |α| = √p は全曲線で共通（Weil予想）
+# 違いは α の「角度」
+
+# α = √p × e^{iθ}
+# θ の分布が rank や CM を反映する
+
+print('α の角度 θ（α = √p × e^{iθ}）')
+print('Sato-Tate：non-CM では θ が半円分布')
+print('CM：θ が特定の値に集中')
+print()
+
+curves = [
+    ('E1 rank=0 CM',     -1,  0),
+    ('E2 rank=1 non-CM', -1,  1),
+    ('E3 rank=2 CM',      0, -4),
+]
+
+for label, A, B in curves:
+    thetas = []
+    for p in primes[:100]:
+        a = ap(A, B, p)
+        disc = a*a - 4*p
+        if disc < 0:
+            re = a / 2
+            im = math.sqrt(-disc) / 2
+            theta = math.atan2(im, re)  # 0 から π
+            thetas.append(theta)
+    
+    # θ を 0〜π を4分割
+    bins = [0]*4
+    for t in thetas:
+        i = int(t / (math.pi/4))
+        if i >= 4: i = 3
+        bins[i] += 1
+    
+    print(f'{label}:')
+    print(f'  θ の分布（0〜π/4, π/4〜π/2, π/2〜3π/4, 3π/4〜π）:')
+    print(f'  {bins}')
+    # θ = π/2 付近（ap=0）の頻度
+    near_half = sum(1 for t in thetas if abs(t - math.pi/2) < math.pi/8)
+    print(f'  θ ≈ π/2（ap≈0）の頻度: {near_half}/{len(thetas)}')
+    print()
+" 2>&1
+
+α = √p × e^{iθ} として：
+
+E1（CM）：θ が π/2 付近に集中（63/94 = 67%）
+E2（non-CM）：θ が均等に分布（46/94 = 49%）
+E3（CM）：θ が π/2 付近に集中（61/94 = 65%）
+
+θ = π/2 ↔ α = √p × i ↔ ap = Re(α+β) = 0
+
+CM曲線：θ が π/2 に縛られる
+  = α が純虚数方向に引っ張られる
+  = Z[i] の構造が角度を固定
+
+non-CM曲線：θ が自由に動く
+  = Sato-Tate 分布
+  = α の角度に制約がない
+
+E1（rank=0）と E3（rank=2）が
+どちらも θ ≈ π/2 に集中している
+
+θ の分布は rank を区別しない
+CM か non-CM かを区別する
+
+rank の情報は θ の分布には
+現れていない
+
+L(E,s) = Π_p (1 - αp^{-s})^{-1}(1 - βp^{-s})^{-1}
+
+各 p の θ（= α の角度）を全部掛け合わせた
+「総合効果」が s=1 で消えるかどうか
+
+個々の θ ではなく
+θ の「積分」が rank を決める
+
+= L関数の解析的な性質
+
+
+
+
+
+
+
+
+
+
